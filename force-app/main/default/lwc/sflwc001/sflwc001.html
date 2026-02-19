@@ -1,0 +1,37 @@
+    <template>
+    <div class={calculatorClass}>
+        <div class="theme-toggle">
+            <button class="theme-btn" onclick={toggleDarkMode} title="Toggle dark mode">
+                <span if:true={isDarkMode}>☀️</span>
+                <span if:false={isDarkMode}>🌙</span>
+            </button>
+        </div>
+        <div class="display" role="status">{displayValue}</div>
+
+        <div class="keys">
+            <button data-value="C" onclick={handleButtonClick}>C</button>
+            <button data-value="neg" onclick={handleButtonClick}>±</button>
+            <button data-value="%" onclick={handleButtonClick}>%</button>
+            <button data-value="/" onclick={handleButtonClick}>÷</button>
+
+            <button data-value="7" onclick={handleButtonClick}>7</button>
+            <button data-value="8" onclick={handleButtonClick}>8</button>
+            <button data-value="9" onclick={handleButtonClick}>9</button>
+            <button data-value="*" onclick={handleButtonClick}>×</button>
+
+            <button data-value="4" onclick={handleButtonClick}>4</button>
+            <button data-value="5" onclick={handleButtonClick}>5</button>
+            <button data-value="6" onclick={handleButtonClick}>6</button>
+            <button data-value="-" onclick={handleButtonClick}>−</button>
+
+            <button data-value="1" onclick={handleButtonClick}>1</button>
+            <button data-value="2" onclick={handleButtonClick}>2</button>
+            <button data-value="3" onclick={handleButtonClick}>3</button>
+            <button data-value="+" onclick={handleButtonClick}>+</button>
+
+            <button data-value="0" class="zero" onclick={handleButtonClick}>0</button>
+            <button data-value="." onclick={handleButtonClick}>,</button>
+            <button data-value="=" onclick={handleButtonClick}>=</button>
+        </div>
+    </div>
+</template>

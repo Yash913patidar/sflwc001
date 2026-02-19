@@ -1,0 +1,10 @@
+<template>
+    
+     <lightning-card  title="Parent lwc" icon-name="standard:account" >
+             <p class="slds-text-align_center"> count: {countValues}</p>
+     </lightning-card>
+
+     <c-child  onsubstract={handleDecrement}
+              onadd={handleIncrement}>
+     </c-child>
+</template>

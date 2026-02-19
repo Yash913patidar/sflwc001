@@ -1,0 +1,12 @@
+<template>
+<lightning-card>
+    <h1>Container Component</h1><br/>
+
+    Did i founnd the product? {productFound}<br/>
+    
+    <template for:each={productList} for:item="product">
+          <p key={product.id}>{product.name}</p>
+    </template>
+    <c-parent-component></c-parent-component>
+</lightning-card>
+</template>

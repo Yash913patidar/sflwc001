@@ -1,0 +1,13 @@
+<template>
+   <lightning-card variant="Narrow" title="Account" icon-name="standard:account">
+            <lightning-input label="Account Name" type="search" value={searchKey} onchange={handleChange}></lightning-input>
+            <div style="height: 300px;">
+                <lightning-datatable
+                    key-field="Id"
+                    data={accounts}
+                    columns={columns}
+                    onrowselection={handleRowSelection}>
+                </lightning-datatable>
+            </div>
+        </lightning-card> 
+</template>

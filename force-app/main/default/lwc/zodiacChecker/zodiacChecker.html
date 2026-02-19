@@ -1,0 +1,19 @@
+<template>
+    <div class="zodiac-checker">
+        <h2>Zodiac Sign Checker</h2>
+        <div class="input-section">
+            <label for="name">Enter your name:</label>
+            <input type="text" id="name" value={name} onchange={handleNameChange} />
+        </div>
+        <div class="input-section">
+            <label for="birthdate">Enter your birth date:</label>
+            <input type="date" id="birthdate" value={birthDate} onchange={handleDateChange} />
+        </div>
+        <div class="button-section">
+            <button onclick={handleSubmit}>Submit</button>
+        </div>
+        <div class="result-section" if:true={resultMessage}>
+            <p>{resultMessage}</p>
+        </div>
+    </div>
+</template>
