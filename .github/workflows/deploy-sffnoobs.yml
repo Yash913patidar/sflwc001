@@ -35,20 +35,28 @@ jobs:
                 
           - name: 'Deploy to environment with running all local tests'
             run: |
-                # write secret safely (no trailing newlines)
-                printf '%s' "${{ secrets.SALESFORCE_AUTH_URL }}" > auth.txt
-                # sanity check: ensure auth file is not empty
-                if [ ! -s auth.txt ]; then
-                  echo "ERROR: SALESFORCE_AUTH_URL secret is empty or missing"
+                # Write JWT private key from secret
+                printf '%s' "${{ secrets.JWT_SERVER_KEY }}" > server.key
+                if [ ! -s server.key ]; then
+                  echo "ERROR: JWT_SERVER_KEY secret is empty"
                   exit 1
                 fi
-                echo "Auth file size (bytes):" $(wc -c < auth.txt)
-                # show CLI version for debugging
-                sf --version || true
-                # attempt login using the provided SFDX URL
-                sf org login sfdx-url --sfdx-url-file auth.txt --alias deploy-org --set-default
-                # list authenticated orgs to verify login
+                echo "JWT key file size: $(wc -c < server.key) bytes"
+                echo "SF CLI version: $(sf --version)"
+                
+                # Login via JWT
+                echo "Logging in via JWT..."
+                sf org login jwt \
+                  --username "${{ secrets.DEPLOYMENT_USER_NAME }}" \
+                  --jwt-key-file server.key \
+                  --client-id "${{ secrets.CONSUMER_KEY }}" \
+                  --instance-url "${{ secrets.INSTANCE_URL }}" \
+                  --set-default
+                
+                echo "Verifying org access..."
                 sf org list
-                # deploy the generated delta
+                
+                echo "Deploying delta..."
                 sf project deploy start --source-dir changed-sources/force-app --test-level RunLocalTests
-                rm auth.txt
+                
+                rm -f server.key
