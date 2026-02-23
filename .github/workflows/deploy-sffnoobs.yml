@@ -17,7 +17,7 @@ jobs:
           - name: 'Checkout source code'
             uses: actions/checkout@v3
             with:
-              fetch-depth: '2'
+              fetch-depth: 0
                 
           # Now Install Salesforce CLI
           - name: 'Install sfdx'
@@ -35,7 +35,20 @@ jobs:
                 
           - name: 'Deploy to environment with running all local tests'
             run: |
-                echo "${{ secrets.SALESFORCE_AUTH_URL }}" > auth.txt
+                # write secret safely (no trailing newlines)
+                printf '%s' "${{ secrets.SALESFORCE_AUTH_URL }}" > auth.txt
+                # sanity check: ensure auth file is not empty
+                if [ ! -s auth.txt ]; then
+                  echo "ERROR: SALESFORCE_AUTH_URL secret is empty or missing"
+                  exit 1
+                fi
+                echo "Auth file size (bytes):" $(wc -c < auth.txt)
+                # show CLI version for debugging
+                sf --version || true
+                # attempt login using the provided SFDX URL
                 sf org login sfdx-url --sfdx-url-file auth.txt --alias deploy-org --set-default
+                # list authenticated orgs to verify login
+                sf org list
+                # deploy the generated delta
                 sf project deploy start --source-dir changed-sources/force-app --test-level RunLocalTests
                 rm auth.txt
