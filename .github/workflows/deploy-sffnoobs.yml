@@ -1,4 +1,66 @@
-name: Deploy to sffnoobs environment on push to main
+# name: Deploy to sffnoobs environment on push to main
+
+# on:
+#   push:
+#     branches: [ master ]
+#     paths:
+#       - 'force-app/**'
+
+# jobs:
+#   Deploy-to-sffnoobs-environment:
+#       runs-on: ubuntu-latest
+#       environment: sffnoobs
+#       steps:
+#           - uses: actions/setup-node@v3
+#             with:
+#               node-version: '18'
+#           - name: 'Checkout source code'
+#             uses: actions/checkout@v3
+#             with:
+#               fetch-depth: 0
+                
+#           # Now Install Salesforce CLI
+#           - name: 'Install sfdx'
+#             run: npm install @salesforce/cli --global
+#           - name: 'Installing sfdx git delta'
+#             run: | 
+#                 echo Y | sfdx plugins:install sfdx-git-delta
+#                 sfdx plugins
+
+#           - name: 'Create delta packages'
+#             run: | 
+#                 mkdir changed-sources
+#                 sf sgd source delta --to "HEAD" --from "HEAD~1" --output changed-sources/ --generate-delta --source force-app/
+#                 echo "[INFO] Diff generated"
+                
+#           - name: 'Deploy to environment with running all local tests'
+#             run: |
+#                 # Write JWT private key from secret
+#                 printf '%s' "${{ secrets.JWT_SERVER_KEY }}" > server.key
+#                 if [ ! -s server.key ]; then
+#                   echo "ERROR: JWT_SERVER_KEY secret is empty"
+#                   exit 1
+#                 fi
+#                 echo "JWT key file size: $(wc -c < server.key) bytes"
+#                 echo "SF CLI version: $(sf --version)"
+                
+#                 # Login via JWT
+#                 echo "Logging in via JWT..."
+#                 sf org login jwt \
+#                   --username "${{ secrets.DEPLOYMENT_USER_NAME }}" \
+#                   --jwt-key-file server.key \
+#                   --client-id "${{ secrets.CONSUMER_KEY }}" \
+#                   --instance-url "${{ secrets.INSTANCE_URL }}" \
+#                   --set-default
+                
+#                 echo "Verifying org access..."
+#                 sf org list
+                
+#                 echo "Deploying delta..."
+#                 sf project deploy start --source-dir changed-sources/force-app --test-level RunLocalTests
+                
+#                 rm -f server.key
+name: Deploy to sffnoobs environment on push to master
 
 on:
   push:
@@ -8,55 +70,83 @@ on:
 
 jobs:
   Deploy-to-sffnoobs-environment:
-      runs-on: ubuntu-latest
-      environment: sffnoobs
-      steps:
-          - uses: actions/setup-node@v3
-            with:
-              node-version: '18'
-          - name: 'Checkout source code'
-            uses: actions/checkout@v3
-            with:
-              fetch-depth: 0
-                
-          # Now Install Salesforce CLI
-          - name: 'Install sfdx'
-            run: npm install @salesforce/cli --global
-          - name: 'Installing sfdx git delta'
-            run: | 
-                echo Y | sfdx plugins:install sfdx-git-delta
-                sfdx plugins
+    runs-on: ubuntu-latest
+    environment: sffnoobs
 
-          - name: 'Create delta packages'
-            run: | 
-                mkdir changed-sources
-                sf sgd source delta --to "HEAD" --from "HEAD~1" --output changed-sources/ --generate-delta --source force-app/
-                echo "[INFO] Diff generated"
-                
-          - name: 'Deploy to environment with running all local tests'
-            run: |
-                # Write JWT private key from secret
-                printf '%s' "${{ secrets.JWT_SERVER_KEY }}" > server.key
-                if [ ! -s server.key ]; then
-                  echo "ERROR: JWT_SERVER_KEY secret is empty"
-                  exit 1
-                fi
-                echo "JWT key file size: $(wc -c < server.key) bytes"
-                echo "SF CLI version: $(sf --version)"
-                
-                # Login via JWT
-                echo "Logging in via JWT..."
-                sf org login jwt \
-                  --username "${{ secrets.DEPLOYMENT_USER_NAME }}" \
-                  --jwt-key-file server.key \
-                  --client-id "${{ secrets.CONSUMER_KEY }}" \
-                  --instance-url "${{ secrets.INSTANCE_URL }}" \
-                  --set-default
-                
-                echo "Verifying org access..."
-                sf org list
-                
-                echo "Deploying delta..."
-                sf project deploy start --source-dir changed-sources/force-app --test-level RunLocalTests
-                
-                rm -f server.key
+    steps:
+      # Checkout full git history (required for delta)
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Setup Node
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # Install Salesforce CLI
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      # Install sfdx-git-delta plugin
+      - name: Install sfdx-git-delta
+        run: |
+          echo Y | sf plugins install sfdx-git-delta
+          sf plugins
+
+      # Generate delta
+      - name: Generate delta package
+        run: |
+          mkdir changed-sources
+          sf sgd source delta \
+            --to "HEAD" \
+            --from "HEAD~1" \
+            --output changed-sources \
+            --generate-delta \
+            --source force-app
+          echo "[INFO] Delta generation completed"
+          ls -R changed-sources || true
+
+      # Authenticate & Deploy
+      - name: Deploy to Salesforce (RunLocalTests)
+        run: |
+          # Write JWT key
+          printf '%s' "${{ secrets.JWT_SERVER_KEY }}" > server.key
+          if [ ! -s server.key ]; then
+            echo "ERROR: JWT_SERVER_KEY secret is empty"
+            exit 1
+          fi
+
+          echo "JWT key file size: $(wc -c < server.key) bytes"
+          echo "SF CLI version: $(sf --version)"
+
+          # Login using JWT
+          echo "Logging in via JWT..."
+          sf org login jwt \
+            --username "${{ secrets.DEPLOYMENT_USER_NAME }}" \
+            --jwt-key-file server.key \
+            --client-id "${{ secrets.CONSUMER_KEY }}" \
+            --instance-url "${{ secrets.INSTANCE_URL }}" \
+            --set-default
+
+          echo "Verifying org connection..."
+          sf org list
+
+          echo "Starting deployment..."
+
+          # Skip if no metadata changes
+          if [ ! -f changed-sources/package.xml ]; then
+            echo "No metadata changes detected. Skipping deployment."
+            exit 0
+          fi
+
+          # Deploy with destructive changes support
+          sf project deploy start \
+            --manifest changed-sources/package.xml \
+            --post-destructive-changes changed-sources/destructiveChanges.xml \
+            --test-level RunLocalTests
+
+          # Cleanup key
+          rm -f server.key
