@@ -1,0 +1,51 @@
+name: Validate on PR to development
+
+on:
+  pull_request:
+    branches: [ development ]
+    paths:
+      - 'force-app/**'
+
+jobs:
+  Validate-to-Development:
+    runs-on: ubuntu-latest
+    environment: sffnoobs
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Salesforce CLI
+        run: npm install @salesforce/cli --global
+
+      - name: Validate Deployment (Check Only)
+        run: |
+          # Write JWT private key from secret
+          printf '%s' "${{ secrets.JWT_SERVER_KEY }}" > server.key
+
+          if [ ! -s server.key ]; then
+            echo "ERROR: JWT_SERVER_KEY secret is empty"
+            exit 1
+          fi
+
+          echo "Logging in via JWT..."
+          sf org login jwt \
+            --username "${{ secrets.DEPLOYMENT_USER_NAME }}" \
+            --jwt-key-file server.key \
+            --client-id "${{ secrets.CONSUMER_KEY }}" \
+            --instance-url "${{ secrets.INSTANCE_URL }}" \
+            --set-default
+
+          echo "Validating full force-app..."
+          sf project deploy validate \
+            --source-dir force-app \
+            --test-level RunLocalTests
+
+          rm -f server.key
