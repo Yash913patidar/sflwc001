@@ -1,0 +1,5 @@
+{
+  "title": "Available Books",
+  "description": "Available Books",
+  "lightning:type": "@apexClassType/c__BookRetrival$AvailableBooks"
+}
