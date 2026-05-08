@@ -1,0 +1,77 @@
+<template>
+    <lightning-card title="📚 Book Library" icon-name="standard:product">
+        <div class="book-container">
+
+            <!-- ✅ If books available -->
+            <template if:true={books}>
+                <template for:each={books} for:item="book">
+
+                    <div key={book.name} class="book-card slds-card slds-p-around_medium">
+
+                        <div class="slds-grid slds-wrap">
+
+                            <!-- Title -->
+                            <div class="slds-col slds-size_1-of-1">
+                                <h2 class="book-title">{book.name}</h2>
+                                <div class="book-meta">
+                                    <span class="book-author">by {book.author}</span>
+                                    <span class="book-year"> | {book.year}</span>
+                                </div>
+                            </div>
+
+                            <!-- Rating + Quantity -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-top_small">
+
+                                <p class="book-rating">
+                                    Rating:
+                                    <template for:each={book.stars} for:item="star">
+                                        <lightning-icon 
+                                            key={star.key}
+                                            icon-name={star.icon}
+                                            size="x-small"
+                                            alternative-text="Star"
+                                            class="star-icon">
+                                        </lightning-icon>
+                                    </template>
+                                    ({book.rating})
+                                </p>
+
+                                <p>Quantity: {book.quantity}</p>
+
+                                <!-- ✅ FIXED -->
+                                <template if:true={book.isBestSeller}>
+                                    <span class="bestseller-badge">Best Seller</span>
+                                </template>
+
+                            </div>
+
+                            <!-- Button -->
+                            <div class="slds-col slds-size_1-of-1 slds-m-top_medium">
+                                <lightning-button
+                                    class="buy-now-button"
+                                    variant="brand"
+                                    label="Buy Now"
+                                    title="Buy Now"
+                                    icon-name="utility:cart"
+                                    onclick={handleBuyNow}
+                                    data-title={book.name}>
+                                </lightning-button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </template>
+            </template>
+
+            <!-- ❌ If no books -->
+            <template if:false={books.length}>
+                <div class="slds-text-align_center slds-p-around_medium">
+                    <p>No books available</p>
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

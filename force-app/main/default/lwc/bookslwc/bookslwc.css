@@ -1,0 +1,98 @@
+/* Container Layout */
+.book-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+/* Book Card */
+.book-card {
+    border-radius: 0.75rem;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* Title */
+.book-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+/* Meta Info */
+.book-meta {
+    margin-top: 0.25rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.book-author {
+    font-weight: 500;
+}
+
+.book-year {
+    margin-left: 0.25rem;
+}
+
+/* Rating Section */
+.book-rating {
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+/* Star Icons */
+.star-icon {
+    --sds-c-icon-color-foreground-default: #f5a623; /* gold color */
+    margin-right: 2px;
+}
+
+/* Quantity */
+p {
+    margin: 0.4rem 0;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+/* Bestseller Badge */
+.bestseller-badge {
+    display: inline-block;
+    margin-top: 0.4rem;
+    padding: 0.2rem 0.6rem;
+    background: #ff9800;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+}
+
+/* Button Styling */
+.buy-now-button {
+    margin-top: 0.8rem;
+}
+
+/* Optional: make button full width */
+.buy-now-button lightning-button {
+    width: 100%;
+}
+
+/* Responsive tweaks */
+@media (max-width: 480px) {
+    .book-title {
+        font-size: 1.1rem;
+    }
+
+    .book-meta,
+    .book-rating {
+        font-size: 0.8rem;
+    }
+}
